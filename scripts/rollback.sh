@@ -27,7 +27,7 @@ previous=$(readlink -- "$current")
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 ln -s -- "$target" "$root/.current-rollback-$$"
 mv -Tf -- "$root/.current-rollback-$$" "$current"
-if systemctl restart "$service" && "$script_dir/verify.sh" --service "$service" --health-url "$health_url"; then
+if systemctl restart "$service" && bash "$script_dir/verify.sh" --service "$service" --health-url "$health_url"; then
   echo "Rollback completed: $release"
 else
   echo "Rollback verification failed; restoring prior active release" >&2
