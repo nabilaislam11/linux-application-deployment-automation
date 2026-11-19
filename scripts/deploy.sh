@@ -31,6 +31,8 @@ if ((dry_run)); then
   exit 0
 fi
 mkdir -p "$root/releases" "$root/logs"
+exec 9>"$root/.deployment.lock"
+flock -n 9 || { echo "Another deployment or rollback is running" >&2; exit 1; }
 log="$root/logs/deploy-$(date -u +%Y%m%dT%H%M%SZ)-$$.log"
 exec > >(tee -a "$log") 2>&1
 echo "Deploying release: $release"
@@ -64,9 +66,11 @@ recover() {
 }
 trap recover ERR
 cp -a -- "$artifact/." "$staging/"
+if find "$staging" -type l -print -quit | grep -q .; then echo "Artifact symlinks are not supported" >&2; false; fi
 [[ -f "$staging/app.py" && -f "$staging/VERSION" ]]
 [[ $(<"$staging/VERSION") == "$release" ]] || { echo "Artifact VERSION does not match release ID" >&2; false; }
-python3 -m py_compile "$staging/app.py"
+PYTHONPYCACHEPREFIX="$staging/.pycache" python3 -m py_compile "$staging/app.py"
+rm -rf -- "$staging/.pycache"
 mv -- "$staging" "$target"
 ln -s -- "$target" "$root/.current-next-$$"
 mv -Tf -- "$root/.current-next-$$" "$current"
