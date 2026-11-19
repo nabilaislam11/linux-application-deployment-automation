@@ -54,7 +54,7 @@ recover() {
       ln -sfn -- "$previous" "$root/.current-restore-$$"
       mv -Tf -- "$root/.current-restore-$$" "$current"
       systemctl restart "$service" || true
-      "$script_dir/verify.sh" --service "$service" --health-url "$health_url" || true
+      bash "$script_dir/verify.sh" --service "$service" --health-url "$health_url" || true
     else
       rm -f -- "$current"
       systemctl stop "$service" || true
@@ -76,6 +76,6 @@ ln -s -- "$target" "$root/.current-next-$$"
 mv -Tf -- "$root/.current-next-$$" "$current"
 activated=1
 systemctl restart "$service"
-"$script_dir/verify.sh" --service "$service" --health-url "$health_url"
+bash "$script_dir/verify.sh" --service "$service" --health-url "$health_url"
 trap - ERR
 echo "Deployment successful: $release"
