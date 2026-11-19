@@ -15,6 +15,9 @@ done
 [[ "$service" =~ ^[a-zA-Z0-9@_.-]+$ ]] || exit 2
 [[ "$health_url" == http://* || "$health_url" == https://* ]] || exit 2
 root=${root%/}
+[[ -d "$root" ]] || { echo "Deployment root not found" >&2; exit 1; }
+exec 9>"$root/.deployment.lock"
+flock -n 9 || { echo "Another deployment or rollback is running" >&2; exit 1; }
 target="$root/releases/$release"
 current="$root/current"
 [[ -d "$target" && ! -L "$target" ]] || { echo "Release not found" >&2; exit 1; }
