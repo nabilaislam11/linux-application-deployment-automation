@@ -19,7 +19,11 @@ cat > "$tmp/bin/curl" <<'STUB'
 #!/usr/bin/env bash
 [[ ! -f "$TEST_ROOT/fail_health" ]]
 STUB
-chmod +x "$tmp/bin/systemctl" "$tmp/bin/curl"
+cat > "$tmp/bin/sleep" <<'STUB'
+#!/usr/bin/env bash
+exit 0
+STUB
+chmod +x "$tmp/bin/systemctl" "$tmp/bin/curl" "$tmp/bin/sleep"
 export PATH="$tmp/bin:$PATH" TEST_ROOT="$tmp"
 cp -a "$repo/example-app/." "$tmp/app/"
 bash "$repo/scripts/deploy.sh" --release v1.0.0 --artifact "$tmp/app" --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health --dry-run
@@ -49,4 +53,30 @@ if bash "$repo/scripts/deploy.sh" --release v1.3.0 --artifact "$tmp/app" --root 
   echo "Expected symlink artifact rejection" >&2; exit 1
 fi
 [[ $(readlink "$tmp/releases-root/current") == "$tmp/releases-root/releases/v1.0.0" ]]
-echo "PASS: dry run, deployment, rollback, and failed activation recovery"
+rm "$tmp/app/unexpected-link"
+echo v1.5.0 > "$tmp/app/VERSION"
+touch "$tmp/fail_health"
+if bash "$repo/scripts/deploy.sh" --release v1.5.0 --artifact "$tmp/app" --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health; then
+  echo "Expected readiness verification failure" >&2; exit 1
+fi
+[[ $(readlink "$tmp/releases-root/current") == "$tmp/releases-root/releases/v1.0.0" ]]
+rm "$tmp/fail_health"
+(
+  flock -x 9
+  touch "$tmp/lock-held"
+  /usr/bin/sleep 2
+) 9>"$tmp/releases-root/.deployment.lock" &
+lock_pid=$!
+for ((i=0;i<100;i++)); do
+  [[ -e "$tmp/lock-held" ]] && break
+  /usr/bin/sleep 0.01
+done
+[[ -e "$tmp/lock-held" ]] || { echo "Could not establish test lock" >&2; exit 1; }
+echo v1.6.0 > "$tmp/app/VERSION"
+if bash "$repo/scripts/deploy.sh" --release v1.6.0 --artifact "$tmp/app" --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health; then
+  echo "Expected deployment lock contention failure" >&2; exit 1
+fi
+[[ $(readlink "$tmp/releases-root/current") == "$tmp/releases-root/releases/v1.0.0" ]]
+kill "$lock_pid" 2>/dev/null || true
+wait "$lock_pid" 2>/dev/null || true
+echo "PASS: deployment, rollback, failed activation, readiness, artifact validation, and locking"
