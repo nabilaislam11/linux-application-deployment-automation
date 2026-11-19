@@ -38,4 +38,15 @@ if bash "$repo/scripts/deploy.sh" --release v1.2.0 --artifact "$tmp/app" --root 
 fi
 [[ $(readlink "$tmp/releases-root/current") == "$tmp/releases-root/releases/v1.0.0" ]]
 rm "$tmp/fail_restart"
+echo v1.3.0 > "$tmp/app/VERSION"
+if bash "$repo/scripts/deploy.sh" --release v1.4.0 --artifact "$tmp/app" --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health; then
+  echo "Expected artifact version mismatch failure" >&2; exit 1
+fi
+[[ $(readlink "$tmp/releases-root/current") == "$tmp/releases-root/releases/v1.0.0" ]]
+[[ ! -e "$tmp/releases-root/releases/v1.4.0" ]]
+ln -s -- /etc/passwd "$tmp/app/unexpected-link"
+if bash "$repo/scripts/deploy.sh" --release v1.3.0 --artifact "$tmp/app" --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health; then
+  echo "Expected symlink artifact rejection" >&2; exit 1
+fi
+[[ $(readlink "$tmp/releases-root/current") == "$tmp/releases-root/releases/v1.0.0" ]]
 echo "PASS: dry run, deployment, rollback, and failed activation recovery"
