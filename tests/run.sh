@@ -31,6 +31,7 @@ bash "$repo/scripts/deploy.sh" --release v1.1.0 --artifact "$tmp/app" --root "$t
 [[ $(readlink "$tmp/releases-root/current") == "$tmp/releases-root/releases/v1.1.0" ]]
 bash "$repo/scripts/rollback.sh" --release v1.0.0 --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health
 [[ $(readlink "$tmp/releases-root/current") == "$tmp/releases-root/releases/v1.0.0" ]]
+echo v1.2.0 > "$tmp/app/VERSION"
 touch "$tmp/fail_restart"
 if bash "$repo/scripts/deploy.sh" --release v1.2.0 --artifact "$tmp/app" --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health; then
   echo "Expected deployment failure" >&2; exit 1
