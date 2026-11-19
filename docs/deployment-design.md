@@ -29,8 +29,8 @@ Each release contains `app.py` and `VERSION`. The systemd unit executes the appl
 
 ## Operational considerations
 
-- A deployment lock is required before using these scripts with concurrent release operators; do not run overlapping deployments against one root.
+- Deployment and rollback acquire a non-blocking advisory lock at `<root>/.deployment.lock` to prevent overlapping operations against one release root.
 - A readiness endpoint returning HTTP 2xx establishes endpoint response, not full application correctness.
 - The sample application uses Python's standard-library HTTP server; adapt the service unit, artifact checks, and health criteria to the actual workload.
-- Deployment requires controlled permissions on the release root and systemd service.
+- Deployment requires controlled permissions on the release root and systemd service. The scripts require `flock` (util-linux) and GNU coreutils.
 - Review the installed service unit after changing its path, user, or environment.
