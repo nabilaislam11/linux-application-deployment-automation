@@ -1,0 +1,16 @@
+name: Deployment automation checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bash syntax validation
+        run: bash -n scripts/*.sh tests/*.sh
+      - name: Integration tests
+        run: bash tests/run.sh
