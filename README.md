@@ -70,4 +70,6 @@ docs/               Deployment architecture and operational workflow
 
 Deployment stops before activation if the artifact or release identifier is invalid. If the new release fails its post-switch checks, the previous release is reactivated. An initial deployment without a previous release cannot restore a prior version; the tool removes the failed active symlink and reports the failure. Explicit rollback targets an already staged release.
 
-See [deployment design](docs/deployment-design.md) for release layout, verification, and failure handling, and [deployment operations](docs/operations.md) for operational checks.\n\nAutomated tests use isolated command stubs for systemd and HTTP checks. The GitHub Actions workflow runs these tests on each push and pull request.
+See [deployment design](docs/deployment-design.md) for release layout, verification, and failure handling, and [deployment operations](docs/operations.md) for operational checks.
+
+Automated tests use isolated command stubs for systemd and HTTP checks. The GitHub Actions workflow runs these tests on each push and pull request.
