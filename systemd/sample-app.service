@@ -1,0 +1,15 @@
+[Unit]
+Description=Versioned sample HTTP application
+After=network.target
+
+[Service]
+Type=simple
+User=appsvc
+WorkingDirectory=/opt/sample-app/current
+ExecStart=/usr/bin/python3 /opt/sample-app/current/app.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
