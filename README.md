@@ -9,7 +9,7 @@ A release is installed in `releases/<release-id>/`, while `current` is a symboli
 ## Features
 
 - Release staging from a local artifact directory
-- Release ID validation and path safety
+- Release ID validation, artifact checks, and deployment locking
 - Atomic symlink replacement
 - Previous-release rollback on failed activation
 - systemd service restart and active-state verification
@@ -19,7 +19,7 @@ A release is installed in `releases/<release-id>/`, while `current` is a symboli
 
 ## Requirements
 
-Linux, Bash, Python 3, `systemctl`, and `curl`. The sample application uses only the Python standard library. Running a systemd-managed service requires an appropriately configured Linux host and sufficient privileges.
+Linux with Bash, Python 3, `systemctl`, `curl`, `flock` (util-linux), and GNU coreutils. The sample application uses only the Python standard library. Running a systemd-managed service requires an appropriately configured Linux host and sufficient privileges.
 
 ## Quick start
 
@@ -70,4 +70,4 @@ docs/               Deployment architecture and operational workflow
 
 Deployment stops before activation if the artifact or release identifier is invalid. If the new release fails its post-switch checks, the previous release is reactivated. An initial deployment without a previous release cannot restore a prior version; the tool removes the failed active symlink and reports the failure. Explicit rollback targets an already staged release.
 
-See [deployment design](docs/deployment-design.md) for release layout, verification, and failure handling.
+See [deployment design](docs/deployment-design.md) for release layout, verification, and failure handling, and [deployment operations](docs/operations.md) for operational checks.\n\nAutomated tests use isolated command stubs for systemd and HTTP checks. The GitHub Actions workflow runs these tests on each push and pull request.
