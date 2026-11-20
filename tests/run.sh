@@ -79,4 +79,14 @@ fi
 [[ $(readlink "$tmp/releases-root/current") == "$tmp/releases-root/releases/v1.0.0" ]]
 kill "$lock_pid" 2>/dev/null || true
 wait "$lock_pid" 2>/dev/null || true
-echo "PASS: deployment, rollback, failed activation, readiness, artifact validation, and locking"
+# Explicit rollback must restore the original active release if restart fails.
+echo v1.7.0 > "$tmp/app/VERSION"
+bash "$repo/scripts/deploy.sh" --release v1.7.0 --artifact "$tmp/app" --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health
+[[ $(readlink "$tmp/releases-root/current") == "$tmp/releases-root/releases/v1.7.0" ]]
+touch "$tmp/fail_restart"
+if bash "$repo/scripts/rollback.sh" --release v1.0.0 --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health; then
+  echo "Expected rollback restart failure" >&2; exit 1
+fi
+[[ $(readlink "$tmp/releases-root/current") == "$tmp/releases-root/releases/v1.7.0" ]]
+rm "$tmp/fail_restart"
+echo "PASS: deployment, rollback, recovery, readiness, artifact validation, and locking"
