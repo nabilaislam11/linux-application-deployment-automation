@@ -26,6 +26,11 @@ STUB
 chmod +x "$tmp/bin/systemctl" "$tmp/bin/curl" "$tmp/bin/sleep"
 export PATH="$tmp/bin:$PATH" TEST_ROOT="$tmp"
 cp -a "$repo/example-app/." "$tmp/app/"
+# Reject unsafe release identifiers without touching the deployment root.
+if bash "$repo/scripts/deploy.sh" --release ../escape --artifact "$tmp/app" --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health; then
+  echo "Expected unsafe release identifier rejection" >&2; exit 1
+fi
+[[ ! -e "$tmp/releases-root" ]]
 bash "$repo/scripts/deploy.sh" --release v1.0.0 --artifact "$tmp/app" --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health --dry-run
 [[ ! -e "$tmp/releases-root" ]] || { echo "Dry run modified filesystem" >&2; exit 1; }
 bash "$repo/scripts/deploy.sh" --release v1.0.0 --artifact "$tmp/app" --root "$tmp/releases-root" --service sample-app.service --health-url http://127.0.0.1:8080/health
