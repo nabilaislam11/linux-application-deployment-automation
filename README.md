@@ -1,5 +1,7 @@
 # Linux Application Deployment Automation
 
+[![Deployment automation checks](https://github.com/nabilaislam11/linux-application-deployment-automation/actions/workflows/quality.yml/badge.svg)](https://github.com/nabilaislam11/linux-application-deployment-automation/actions/workflows/quality.yml)
+
 Release-oriented deployment tooling for Linux services, featuring versioned releases, atomic activation, service lifecycle management, health verification, and rollback.
 
 ## Architecture
